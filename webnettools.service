@@ -1,0 +1,15 @@
+[Unit]
+Description=PsauxIT Webnettools
+DefaultDependencies=no
+After=network.target
+
+[Service]
+Type=simple
+User=black
+Group=black
+ExecStart=/home/black/deploy_start_stop.sh --boot
+TimeoutStartSec=0
+RemainAfterExit=yes
+
+[Install]
+WantedBy=default.target
