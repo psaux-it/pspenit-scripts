@@ -7,7 +7,7 @@ After=network.target
 Type=simple
 User=black
 Group=black
-ExecStart=/home/black/deploy_start_stop.sh --boot
+ExecStart=/home/black/jvm_ops.sh --boot
 TimeoutStartSec=0
 RemainAfterExit=yes
 
