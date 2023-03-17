@@ -111,15 +111,16 @@ mvn_build () {
     cd "${preprod_path}"
     echo ""
     mvn clean &>/dev/null &
-    my_wait "Removing old.." && replace_suc "Completed successfully!" || { replace_fail "Failed"; fatal "QUIT"; }
+    my_wait "Cleaning previous backend build.." && replace_suc "Cleaning previous backend build COMPLETED!" || { replace_fail "Cleaning previous backend build FAILED!"; fatal "QUIT"; }
+    { rm -r "${preprod_path}"/src/main/frontend/{node,node_modules}; rm -r "${preprod_path}"/src/main/frontend/public/{build,vendor}; } &>/dev/null &
+    my_wait "Cleaning previous frontend build.." && replace_suc "Cleaning previous frontend build COMPLETED!" || { replace_fail "Cleaning previous frontend build FAILED!"; fatal "QUIT"; }
     mvn package &>/dev/null &
-    my_wait "Building application.." && replace_suc "Completed successfully! Ready to deployment!" || { replace_fail "Failed!"; fatal "QUIT"; }
+    my_wait "Building application.." && replace_suc "Building application COMPLETED! READY TO DEPLOYMENT!" || { replace_fail "Building application FAILED!"; fatal "QUIT"; }
     echo ""
   else
     fatal "Preprod path not exist!"
   fi
 }
-
 
 # Application global vars
 global_vars () {
