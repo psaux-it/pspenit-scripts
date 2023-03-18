@@ -1,11 +1,26 @@
 #!/bin/bash
-#############################################################################
-# Single jar, maven build,deploy jvm control helper script.
-# For multiple jar files you need some extra loops but this is the basic idea.
-#############################################################################
+#
+# Copyright (C) 2021 Hasan CALISIR <hasan.calisir@psauxit.com>
+# Distributed under the GNU General Public License, version 2.0.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# What is doing this script exactly?
+# -Maven build, deploy, jvm control helper script for pspenit app.
 
 # app info
-prog_name="JVM Tools | PSAUXIT.COM"
+prog_name="JVM Tools | PSAUXIT-PSPENIT"
 script_name="$0"
 
 # prod path | app name
@@ -59,6 +74,14 @@ fatal () {
   exit 1
 }
 
+pretty_suc () {
+  echo "${m_tab}${TPUT_BOLD}${green}[ ✓ ] ${cyan}${1}${reset}"
+}
+
+pretty_fail () {
+  echo "${m_tab}${TPUT_BOLD}${red}[ x ] ${red}${1}${reset}"
+}
+
 replace_suc () {
   tput cuu 1
   echo "${m_tab}${TPUT_BOLD}${green}[ ✓ ] ${cyan}${1}${reset}"
@@ -66,7 +89,7 @@ replace_suc () {
 
 replace_fail () {
   tput cuu 1
-  echo "${m_tab}${TPUT_BOLD}${red}[ x ] ${cyan}${1}${reset}"
+  echo "${m_tab}${TPUT_BOLD}${red}[ x ] ${red}${1}${reset}"
 }
 
 # deployment process
@@ -88,18 +111,18 @@ deploy () {
         if [[ "$(md5sum "${preprod_app}" | awk '{print $1}')" != "$(md5sum "${prod_app}" | awk '{print $1}')" ]]; then
           { rm -rf "${prod_path:?}"; mkdir -p "${prod_path}"/lib; cp "${preprod_app}" "${prod_path}"/"${prod_app##*/}"; cp -r "${preprod_path}"/target/lib/* "${prod_path}"/lib/; } >/dev/null 2>&1
         else
-          echo "Application up to date. Deployment skipped!"
+          pretty_suc "Application up to date. Deployment SKIPPED!"
           return 1
         fi
       else
         { mkdir -p "${prod_path}"/lib; cp "${preprod_app}" "${prod_path}"/"${app_name}"; cp -r "${preprod_path}"/target/lib/* "${prod_path}"/lib/; find_prod_app; } >/dev/null 2>&1
       fi
     else
-      echo "Cannot start deployment process, deployment jar cannot found!"
+      pretty_fail "Cannot start deployment process, deployment jar cannot found!"
       return 1
     fi
   else
-    echo "Cannot start deployment process, preprod path not found!"
+    pretty_fail "Cannot start deployment process, preprod path not found!"
     return 1
   fi
   return 0
@@ -109,14 +132,12 @@ deploy () {
 mvn_build () {
   if [[ -d "${preprod_path:?}" ]]; then
     cd "${preprod_path}"
-    echo ""
     mvn clean &>/dev/null &
     my_wait "Cleaning previous backend build.." && replace_suc "Cleaning previous backend build COMPLETED!" || { replace_fail "Cleaning previous backend build FAILED!"; fatal "QUIT"; }
     { rm -r "${preprod_path}"/src/main/frontend/{node,node_modules}; rm -r "${preprod_path}"/src/main/frontend/public/{build,vendor}; } &>/dev/null &
     my_wait "Cleaning previous frontend build.." && replace_suc "Cleaning previous frontend build COMPLETED!" || { replace_fail "Cleaning previous frontend build FAILED!"; fatal "QUIT"; }
     mvn package &>/dev/null &
     my_wait "Building application.." && replace_suc "Building application COMPLETED! READY TO DEPLOYMENT!" || { replace_fail "Building application FAILED!"; fatal "QUIT"; }
-    echo ""
   else
     fatal "Preprod path not exist!"
   fi
@@ -140,17 +161,22 @@ global_vars () {
 nohup_java () {
   startwait=5
   pid=$!
+  spin='-\|/'
+  mi=0
   for i in $(seq $startwait); do
     if ! kill -0 $pid 2>/dev/null; then
       wait $!
       exitcode=$?
-      echo "Application cannot (re)started, EXITCODE:$exitcode" >&2
+      replace_fail "Application cannot (re)started, EXITCODE:$exitcode" >&2
       break
     fi
+    mi=$(( (mi+1) %4 ))
+    printf "\r${m_tab}${green}[ ${spin:$mi:1} ]${magenta} ${1}${reset}"
     sleep 1
   done
   if kill -0 $pid; then
-    echo "Application (re)started successfully!"
+    echo ""
+    replace_suc "Application (re)started successfully!"
   fi
 }
 
@@ -167,16 +193,16 @@ my_run_f () {
 # stop jvm
 stop_jvm () {
   if kill -9 $(ps aux | grep -v grep | grep "${app_name}" | awk '{print $2}') >/dev/null 2>&1; then
-    echo "Application stopped!"
+    pretty_suc "Application stopped!"
   else
-    echo "Application already stopped!"
+    pretty_suc "Application already stopped!"
   fi
 }
 
 # Activate python virtual env
 venv_ () {
-  cd "$HOME/virtualenv/wapiti" || echo "Python venv path cannot found. Wapiti is disabled."
-  . ./bin/activate || echo "Python venv cannot activate. Wapiti is disabled."
+  cd "$HOME/virtualenv/wapiti" || pretty_fail "Python venv path cannot found."
+  . ./bin/activate || pretty_fail "Python venv cannot activated."
 }
 
 
@@ -184,9 +210,9 @@ venv_ () {
 start_jvm () {
   if ! ps aux | grep -v grep | grep "${app_name}" >/dev/null 2>&1; then
     find_prod_app
-    [[ $prod_app ]] && { venv_; global_vars; my_run; nohup_java; } || echo "App not found. Cannot start application!"
+    [[ $prod_app ]] && { venv_; global_vars; my_run; nohup_java "Re-starting..."; } || pretty_fail "App not found. Cannot start application!"
   else
-    echo "Application already running!"
+    pretty_suc "Application already running!"
   fi
 }
 
@@ -205,7 +231,7 @@ restart_jvm () {
 run_foreground () {
   stop_jvm
   find_prod_app
-  [[ $prod_app ]] && { global_vars; my_run_f; } || echo "App not found. Cannot start application!"
+  [[ $prod_app ]] && { global_vars; my_run_f; } || pretty_fail "App not found. Cannot start application!"
 }
 
 help () {
@@ -227,15 +253,15 @@ help () {
 deployment () {
   if deploy; then
     # Restart application
-    [[ $clean -eq 0 ]] && echo "New application version found, deployment completed successfully" || echo "Clean deployment completed successfully"
-    echo "Trying to (re)start application..."
+    [[ $clean -eq 0 ]] && pretty_suc "OK! Deployment COMPLETED!" || pretty_suc "DONE! Clean deployment COMPLETED!"
+    pretty_suc "Will try to (re)start application..."
     restart_jvm
   elif ! ps aux | grep -v grep | grep "${prod_app##*/}" >/dev/null 2>&1; then
-    echo "Application is not working currently.."
-    echo "Trying to start application..."
+    pretty_fail "Application is not working currently.."
+    pretty_suc "Trying to start application..."
     start_jvm
   else
-    echo "Application is running."
+    pretty_suc "Application is running."
   fi
 }
 
