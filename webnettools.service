@@ -1,5 +1,5 @@
 [Unit]
-Description=PsauxIT Webnettools
+Description=PSAUXIT pspenit pentest service
 DefaultDependencies=no
 After=network.target
 
