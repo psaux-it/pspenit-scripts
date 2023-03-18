@@ -128,14 +128,47 @@ deploy () {
   return 0
 }
 
+# clean frontend
+clean () {
+  arrb=("node" "node_modules" "package-lock.json")
+  arrf=("vendor" "build")
+
+  for d in "${arrb[@]}"; do
+    if [[ -e "${preprod_path}/src/main/frontend/${d}" ]]; then
+      print_b=1
+      rm -rf "${preprod_path:?}/src/main/frontend/${d}" &>/dev/null &
+    fi
+  done
+
+  if [[ "${print_b}" ]]; then
+    my_wait "Cleaning node,node_modules,lock.json.." && replace_suc "Cleaning node,node_modules,lock.json COMPLETED!" || { replace_fail "Cleaning node,node_modules,lock.json FAILED!"; fatal "QUIT"; }
+  fi
+
+  for d in "${arrf[@]}"; do
+    if [[ -d "${preprod_path}/src/main/frontend/public/${d}" ]]; then
+      print_f=1
+      rm -r "${preprod_path}/src/main/frontend/public/${d}" &>/dev/null &
+    fi
+  done
+
+  if [[ "${print_f}" ]]; then
+    my_wait "Cleaning previous frontend build.." && replace_suc "Cleaning previous frontend build COMPLETED!" || { replace_fail "Cleaning previous frontend build FAILED!"; fatal "QUIT"; }
+  fi
+
+  if [[ $1 == all ]] ; then
+    cd "${preprod_path}"
+    mvn clean &>/dev/null &
+    my_wait "Cleaning previous backend build.." && replace_suc "Cleaning previous backend build COMPLETED!" || { replace_fail "Cleaning previous backend build FAILED!"; fatal "QUIT"; }
+  fi
+}
+
 # Build jar via maven
 mvn_build () {
   if [[ -d "${preprod_path:?}" ]]; then
     cd "${preprod_path}"
     mvn clean &>/dev/null &
     my_wait "Cleaning previous backend build.." && replace_suc "Cleaning previous backend build COMPLETED!" || { replace_fail "Cleaning previous backend build FAILED!"; fatal "QUIT"; }
-    { rm -r "${preprod_path}"/src/main/frontend/{node,node_modules}; rm -r "${preprod_path}"/src/main/frontend/public/{build,vendor}; } &>/dev/null &
-    my_wait "Cleaning previous frontend build.." && replace_suc "Cleaning previous frontend build COMPLETED!" || { replace_fail "Cleaning previous frontend build FAILED!"; fatal "QUIT"; }
+    clean
     mvn package &>/dev/null &
     my_wait "Building application.." && replace_suc "Building application COMPLETED! READY TO DEPLOYMENT!" || { replace_fail "Building application FAILED!"; fatal "QUIT"; }
   else
@@ -205,6 +238,7 @@ venv_ () {
   . ./bin/activate || pretty_fail "Python venv cannot activated."
 }
 
+
 # start jvm with python venv
 start_jvm () {
   if ! ps aux | grep -v grep | grep "${app_name}" >/dev/null 2>&1; then
@@ -235,7 +269,7 @@ run_foreground () {
 
 help () {
   echo -e "\n${m_tab}${cyan}# Script Help"
-  echo -e "${m_tab}# --------------------------------------------------------"
+  echo -e "${m_tab}# ---------------------------------------------------------------------------------"
   echo -e "${m_tab}#${m_tab}--start              start jvm"
   echo -e "${m_tab}#${m_tab}--stop               stop jvm"
   echo -e "${m_tab}#${m_tab}--restart            restart jvm"
@@ -243,10 +277,12 @@ help () {
   echo -e "${m_tab}#${m_tab}--deploy             start deployment"
   echo -e "${m_tab}#${m_tab}--build              build app"
   echo -e "${m_tab}#${m_tab}--build-deploy       build app and start deploy"
+  echo -e "${m_tab}#${m_tab}--clean              clean previous frontend build"
+  echo -e "${m_tab}#${m_tab}--clean-all          clean previous frontend & backend build"
   echo -e "${m_tab}#${m_tab}--venv               activate python virtual env"
   echo -e "${m_tab}#${m_tab}--boot               start jvm on boot"
   echo -e "${m_tab}#${m_tab}--help               display help"
-  echo -e "${m_tab}# ---------------------------------------------------------${reset}\n"
+  echo -e "${m_tab}# ---------------------------------------------------------------------------------${reset}\n"
 }
 
 deployment () {
@@ -287,17 +323,19 @@ main () {
   # set script arguments
   while [[ "$#" -gt 0 ]]; do
     case "$1" in
-      -s  | --start        ) start_jvm      ;;
-      -t  | --stop         ) stop_jvm       ;;
-      -r  | --restart      ) restart_jvm    ;;
-      -f  | --foreground   ) run_foreground ;;
-      -d  | --deploy       ) deployment     ;;
-      -c  | --build        ) mvn_build      ;;
-      -cd | --build-deploy ) build_deploy   ;;
+      -s  | --start        ) start_jvm       ;;
+      -t  | --stop         ) stop_jvm        ;;
+      -r  | --restart      ) restart_jvm     ;;
+      -f  | --foreground   ) run_foreground  ;;
+      -d  | --deploy       ) deployment      ;;
+      -c  | --build        ) mvn_build       ;;
+      -cd | --build-deploy ) build_deploy    ;;
+      -e  | --clean        ) clean           ;;
+      -ca | --clean-all    ) clean all       ;;
       -v  | --venv         ) venv_           ;;
-      -b  | --boot         ) boot           ;;
-      -h  | --help         ) help           ;;
-      --  | -* | *         ) inv_opt        ;;
+      -b  | --boot         ) boot            ;;
+      -h  | --help         ) help            ;;
+      --  | -* | *         ) inv_opt         ;;
     esac
     break
   done
