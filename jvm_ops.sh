@@ -205,7 +205,6 @@ venv_ () {
   . ./bin/activate || pretty_fail "Python venv cannot activated."
 }
 
-
 # start jvm with python venv
 start_jvm () {
   if ! ps aux | grep -v grep | grep "${app_name}" >/dev/null 2>&1; then
