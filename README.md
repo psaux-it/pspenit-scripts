@@ -1,6 +1,6 @@
 # Pentest Service Scripts RCS (RUN-CATCH-SHARE)
 
-**helper.sh** --> wrapper script between java and cmd. We need it because we haven't implemented message queuer like rabbitmq to java, also we have no distributed system, load balancing etc. Somehow we need to control server load and process timeouts. For now, doing well.
+**helper.sh** --> wrapper script between java and cmd. We need it because we haven't implemented message queuer like rabbitmq to java, also we have no distributed system, load balancing etc. Somehow we need to control server load and process timeouts. For now, doing well. When you add new pentest tool to [pspenit](https://github.com/psaux-it/pspenit) please connect shell command via this script.
 
 **jvm_ops.sh** --> Project's build and deploy automation
 
