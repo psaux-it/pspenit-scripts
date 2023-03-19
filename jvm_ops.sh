@@ -179,14 +179,14 @@ mvn_build () {
 # Application global vars
 global_vars () {
   PORT=8080
-  export PATH=/home/black/.asn:/home/black/Asn:/home/black/testssl.sh:/home/black/helper-scripts:/home/black/.gem/ruby/2.7.0/bin:/home/black/amass_linux_amd64:/home/black/virtualenv/wapiti:/home/black/virtualenv/wapiti/XSStrike:/home/black/RustScan/target/release:$PATH
+  export PATH=$PATH
   export AVAILABLE_TOOLS=testssl,ping,dig,dnsrecon,wpscan,ddec,amass,whois,host,rustscan,cidr,mtr,wapiti,asn,xsstrike
   export RATE_LIMIT=60000
-  export CA_DIR=/home/black/certs
+  export CA_DIR=/etc/ssl/certs/
   export PORT=8080
-  export JAVA_OPTIONS="-Dquarkus.http.host=127.0.0.1 -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Dquarkus.http.port=${PORT}"
+  export JAVA_OPTIONS="-Dquarkus.http.host=10.0.0.3 -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Dquarkus.http.port=${PORT}"
   export INTRO_TEXT='<div class="accept"><p class="accept-p"><span style="font-size:14px">By using this free service, I accept the <a href="https://tools.psauxit.com/page/terms-and-conditions" onclick="window.open(this.href, ">Terms And Conditions</a> and <a href="https://tools.psauxit.com/page/privacy-policy" onclick="window.open(this.href, ">Privacy Policy</a> of this website (<a href="https://www.psauxit.com/" onclick="window.open( this.href, "><span style="color:#e74c3c"><em>psauxit.com</em></span></a> ).&nbsp;I declare that <strong>I will only scan my own network and domain names I own</strong> for vulnerability testing purposes.</span></p></div>'
-  export http_proxy="http://hsntgm:%23%23Ii0210154%24%24@10.0.0.3:3128"
+  export http_proxy="http://hsntgm:%23%23Ii0210154%24%24@127.0.0.1:3128"
 }
 
 # Test application is working after (re)start in background for 5 sec
@@ -232,18 +232,11 @@ stop_jvm () {
   fi
 }
 
-# Activate python virtual env
-venv_ () {
-  cd "$HOME/virtualenv/wapiti" || pretty_fail "Python venv path cannot found."
-  . ./bin/activate || pretty_fail "Python venv cannot activated."
-}
-
-
-# start jvm with python venv
+# start jvm
 start_jvm () {
   if ! ps aux | grep -v grep | grep "${app_name}" >/dev/null 2>&1; then
     find_prod_app
-    [[ $prod_app ]] && { venv_; global_vars; my_run; nohup_java "Re-starting..."; } || pretty_fail "App not found. Cannot start application!"
+    [[ $prod_app ]] && { global_vars; my_run; nohup_java "Re-starting..."; } || pretty_fail "App not found. Cannot start application!"
   else
     pretty_suc "Application already running!"
   fi
@@ -279,7 +272,6 @@ help () {
   echo -e "${m_tab}#${m_tab}--build-deploy       build app and start deploy"
   echo -e "${m_tab}#${m_tab}--clean              clean previous frontend build"
   echo -e "${m_tab}#${m_tab}--clean-all          clean previous frontend & backend build"
-  echo -e "${m_tab}#${m_tab}--venv               activate python virtual env"
   echo -e "${m_tab}#${m_tab}--boot               start jvm on boot"
   echo -e "${m_tab}#${m_tab}--help               display help"
   echo -e "${m_tab}# ---------------------------------------------------------------------------------${reset}\n"
@@ -332,7 +324,6 @@ main () {
       -cd | --build-deploy ) build_deploy    ;;
       -e  | --clean        ) clean           ;;
       -ca | --clean-all    ) clean all       ;;
-      -v  | --venv         ) venv_           ;;
       -b  | --boot         ) boot            ;;
       -h  | --help         ) help            ;;
       --  | -* | *         ) inv_opt         ;;
