@@ -20,7 +20,7 @@ banner () {
 }
 
 not_scan_me () {
-  if [[ $1 == *"psauxit.com"* || $1 == *"dedeoglupeynir.com"* || $1 == *"ilhamireis.com"* || $1 == *"zuzutasarim.com"* || $1 == *"159.69.247."* || $1 == *"127.0."* || $1 == *"localhost"* || $1 == *"local.psauxit.com"* ]]; then
+  if [[ $1 == *"159.69."* || $1 == *"127.0."* || $1 == *"10.0."* || $1 == *"localhost"* || $1 == *"local.psauxit.com"* || $1 == *"mail.psauxit.com"* || $1 == *"proxy.psauxit.com"* ]]; then
     echo "Permission denied, you attempted to scan me or my neighbours. Angry cow following you!" | cowsay | lolcat -f -t
     exit 1
   fi
@@ -149,25 +149,25 @@ elif [[ $1 == dnsrecon ]]; then
     not_scan_me $2
     only_domains $2
     banner
-    timeout -s 9 10m python dnsrecon.py -d $2 --threads 1 &
+    timeout -s 9 10m dnsrecon.py -d $2 --threads 1 &
     my_wait_err
   elif [[ $3 == AXFR ]]; then
     not_scan_me $4
     only_domains $4
     banner
-    timeout -s 9 10m python dnsrecon.py -d $4 -t zonewalk --threads 1 &
+    timeout -s 9 10m dnsrecon.py -d $4 -t zonewalk --threads 1 &
     my_wait_err
   elif [[ $3 == ZONEWALK ]]; then
     not_scan_me $4
     only_domains $4
     banner
-    timeout -s 9 10m python dnsrecon.py -d $4 -t axfr --threads 1 &
+    timeout -s 9 10m dnsrecon.py -d $4 -t axfr --threads 1 &
     my_wait_err
   elif [[ $3 == BRUTE ]]; then
     not_scan_me $4
     only_domains $4
     banner
-    timeout -s 9 30m python dnsrecon.py -d $4 -D /dnsrecon/subdomains-top1mil-20000.txt -t brt --threads 1 &
+    timeout -s 9 30m dnsrecon.py -d $4 -D "$HOME/tools/dnsrecon/subdomains-top1mil-5000.txt" -t brt --threads 1 &
     my_wait_err
   fi
 elif [[ $1 == wpscan ]]; then
@@ -223,7 +223,7 @@ elif [[ $1 == ddec ]]; then
   not_scan_me "${@: -1}"
   only_domains "${@: -1}"
   banner
-  timeout 1m python ddec.py $2 $3 $4 $5 $6
+  timeout 1m ddec.py $2 $3 $4 $5 $6
 elif [[ $1 == rustscan ]]; then
   if [[ $# -eq 2 ]]; then
     not_scan_me $2
@@ -258,7 +258,6 @@ elif [[ $1 == whois ]]; then
   banner
   timeout 1m whois $2
 elif [[ $1 == cidr ]]; then
-  not_scan_me $2
   cidr_check $2
   banner
   timeout 1m sipcalc -a $2
@@ -279,7 +278,7 @@ elif [[ $1 == asnn ]]; then
       if [[ "${arg}" == "${code}" ]]; then
         cidr="${code}" && break
       fi
-    done < "$HOME/helper-scripts/cidr.file"
+    done < "$HOME/scripts/pspenit-scripts/cidr.file"
   done
 
   if [[ -n "${shodan}" && -n "${cidr}" ]]; then
@@ -307,5 +306,5 @@ elif [[ $1 == xsstrike ]]; then
     not_scan_me $2
     banner
     add_prefix $2
-    timeout -s 9 20m python xsstrike.py -u $furl -t 1 --crawl --blind -l 3 --skip --proxy
+    timeout -s 9 20m xsstrike.py -u $furl -t 1 --crawl --blind -l 3 --skip --proxy
 fi
