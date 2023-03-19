@@ -8,4 +8,4 @@
 
 **proxy.sh** --> To keep our server IP's clean while testing we used to use public proxies before. This is deprecated now. We have our own squid proxy server 159.69.183.155, sure need a proxy chain but for now It is ok.
 
-**webnettools.service** --> This is systemd service that start our service at boot time via jvm_ops.sh.
+**pspenit.service** --> This is systemd service that start our service at boot time via jvm_ops.sh.
