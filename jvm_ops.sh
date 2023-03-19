@@ -180,7 +180,7 @@ mvn_build () {
 global_vars () {
   PORT=8080
   export PATH=$PATH
-  export AVAILABLE_TOOLS=testssl,ping,dig,dnsrecon,wpscan,ddec,amass,whois,host,rustscan,cidr,mtr,wapiti,asn,xsstrike
+  export AVAILABLE_TOOLS=testssl,ping,dig,dnsrecon,wpscan,ddec,amass,whois,host,rustscan,cidr,mtr,wapiti,asn,xsstrike,nmap
   export RATE_LIMIT=60000
   export CA_DIR=/etc/ssl/certs/
   export PORT=8080
