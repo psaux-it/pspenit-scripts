@@ -80,9 +80,6 @@ cidr_check () {
   if ! [[ $1 == *"/"* ]]; then
     echo "Missing Subnet Mask. Specify an IP address with subnet e.g. 127.0.0.1/24" | cowsay | lolcat -f -t
     exit 1
-  else
-   deserialized=${1%/*}
-   ip_validate $deserialized
   fi
 }
 
