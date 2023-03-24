@@ -178,15 +178,12 @@ mvn_build () {
 
 # Application global vars
 global_vars () {
-  PORT=8080
-  export PATH=$PATH
+  export PATH=/home/black/.local/bin:/home/black/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:$PATH
   export AVAILABLE_TOOLS=testssl,ping,dig,dnsrecon,wpscan,ddec,amass,whois,host,rustscan,cidr,mtr,wapiti,asn,xsstrike,nmap
   export RATE_LIMIT=60000
   export CA_DIR=/etc/ssl/certs/
   export PORT=8080
-  export JAVA_OPTIONS="-Dquarkus.http.host=10.0.0.3 -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Dquarkus.http.port=${PORT}"
   export INTRO_TEXT='<div class="accept"><p class="accept-p"><span style="font-size:14px">By using this free service, I accept the <a href="https://tools.psauxit.com/page/terms-and-conditions" onclick="window.open(this.href, ">Terms And Conditions</a> and <a href="https://tools.psauxit.com/page/privacy-policy" onclick="window.open(this.href, ">Privacy Policy</a> of this website (<a href="https://www.psauxit.com/" onclick="window.open( this.href, "><span style="color:#e74c3c"><em>psauxit.com</em></span></a> ).&nbsp;I declare that <strong>I will only scan my own network and domain names I own</strong> for vulnerability testing purposes.</span></p></div>'
-  export http_proxy="http://hsntgm:%23%23Ii0210154%24%24@127.0.0.1:3128"
 }
 
 # Test application is working after (re)start in background for 5 sec
@@ -215,12 +212,12 @@ nohup_java () {
 
 # run in background
 my_run () {
-  nohup java -jar "${prod_app}" >/dev/null 2>&1 &
+  nohup java "-Dquarkus.http.host=10.0.0.3" "-Dquarkus.http.port=${PORT}" "-Djava.util.logging.manager=org.jboss.logmanager.LogManager" -jar "${prod_app}" >/dev/null 2>&1 &
 }
 
 # run in foreground
 my_run_f () {
-  java -jar "${prod_app}"
+  java "-Dquarkus.http.host=10.0.0.3" "-Dquarkus.http.port=${PORT}" "-Djava.util.logging.manager=org.jboss.logmanager.LogManager" -jar "${prod_app}"
 }
 
 # stop jvm
